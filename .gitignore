@@ -45,3 +45,25 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# My settings
+*~
+*.exe
+*.stackdump
+*#
+.#*
+#*
+*.old
+*.ppm
+log*
+*.c.bk_*
+run.csh
+notes.c
+testscale.c
+spotlight
+plane
+pointlight
+raycast.planeIntDbg.bk.c
+raycast.planeIntDbg.discard.c
+raycast*_*.c
+*.gz

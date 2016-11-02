@@ -1,0 +1,34 @@
+[
+    {
+	"type": "camera",
+	"width": 0.9,
+	"height": 0.9
+    },
+    {
+	"type": "light",
+	"color": [2.0, 2.0, 2.0],
+	"position": [0, 2, 4],
+	"direction": [0, -1, 0],
+	"radial-a2": 0.105,
+	"radial-a1": 0.105,
+	"radial-a0": 0.125,
+	"angular-a0": 50,
+	"theta": 10
+    },
+    {
+	"type": "light",
+	"color": [2, 2, 2],
+	"theta": 0,
+	"radial-a2": 0.125,
+	"radial-a1": 0.125,
+	"radial-a0": 0.125,
+	"position": [2, 2, 1]
+    },
+    {
+	"type": "plane",
+	"diffuse_color": [0.5, 0, 0.5],
+	"specular_color": [1.0, 1.0, 1.0],
+	"position": [0, -1, 0],
+	"normal": [0, 1, 0]
+    }
+]

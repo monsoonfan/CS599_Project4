@@ -1,0 +1,31 @@
+[
+    {
+	"type": "camera",
+	"width": 0.9,
+	"height": 0.9
+    },
+    {
+	"type": "light",
+	"color": [1.0, 1.0, 1.0],
+	"position": [0, 5, 20],
+	"direction": [0, -1, 0],
+	"radial-a2": 0.01,
+	"radial-a1": 0.01,
+	"radial-a0": 0.01,
+	"angular-a0": 15,
+	"theta": 30
+    },
+    {
+	"type": "plane",
+	"diffuse_color": [0.5, 0, 0.5],
+	"specular_color": [1.0, 1.0, 1.0],
+	"position": [0, -5, 0],
+	"normal": [0, 1, 0]
+    },
+    {
+	"type": "sphere",
+	"color": [1, 0, 0],
+	"position": [-5, -3, 20],
+	"radius": 2
+    }
+]
