@@ -235,7 +235,7 @@ double planeIntersectionOrig    (double* Ro, double* Rd, double* C, double* N);
 double quadricIntersection  (double* Ro, double* Rd, double* C, A_J c, double* Nq);
 double cylinderIntersection (double* Ro, double* Rd, double* C, double r);
 
-void rayCast(double* Ro, double* Rd, double* color_in, double* color_out);
+void rayCast(double* Ro, double* Rd, double* color_in, double* color_out, int level);
 
 double getColor        (double value1, double value2);
 void   getObjectNormal (int index, double* Ro, double* Qn, double* N);
@@ -1029,7 +1029,7 @@ void renderScene(JSON_object *scene, RGBPixel *image) {
       double default_color[3] = {DEFAULT_COLOR,DEFAULT_COLOR,DEFAULT_COLOR};
       double color_out[3] = {0,0,0};
       if (DBG) printf("calling rC @ {%d,%d}\n",x,y);
-      rayCast(Ro,Rd,default_color,color_out);
+      rayCast(Ro,Rd,default_color,color_out,0);
       RGB_PIXEL_MAP[i].r = clampColor(color_out[0]);
       RGB_PIXEL_MAP[i].g = clampColor(color_out[1]);
       RGB_PIXEL_MAP[i].b = clampColor(color_out[2]);
@@ -1042,7 +1042,7 @@ void renderScene(JSON_object *scene, RGBPixel *image) {
 
 // Raycaster function - returns the color found by casting a ray from Ro in Rd direction
 //double * rayCast(double* Ro, double* Rd, double* color) { // warning about returning local variable
-void rayCast(double* Ro, double* Rd, double* color_in, double* color_out) {
+void rayCast(double* Ro, double* Rd, double* color_in, double* color_out, int level) {
   
   // variables
   double best_t = INFINITY;
@@ -1050,6 +1050,14 @@ void rayCast(double* Ro, double* Rd, double* color_in, double* color_out) {
   double object_color[3];
   double Qn[3];              // this will be the normal for the quadric at intersection point 
   
+  // Base case
+  if (level > MAX_RECURSION_LEVEL) {
+    color_out[0] = color_in[0];
+    color_out[1] = color_in[1];
+    color_out[2] = color_in[2];
+    return;
+  }
+
   // loop over all objects in scene and find intersections, could also use objects != NULL
   for (int o = 0; o < INPUT_FILE_DATA.num_objects; o += 1) {
     // t stores if we have an intersection or not
@@ -1219,6 +1227,18 @@ void rayCast(double* Ro, double* Rd, double* color_in, double* color_out) {
 	  V[2] = -Rd[2];
 	  //R = reflection of L about N: R = 2(N dot L)N - L
 	  getReflectionVector(L,N,R,DBG);
+
+	  // Add project 4 reflectivity
+	  if (INPUT_FILE_DATA.js_objects[best_t_index].flags.has_reflectivity &&
+		INPUT_FILE_DATA.js_objects[best_t_index].reflectivity > 0) {
+	    double reflected_color[3];
+	    level++;
+	    //printf("DBG: calling rayCast at level %d\n",level);
+	    rayCast(Ro_new,R,color_in,reflected_color,level);
+	    color_out[0] = reflected_color[0];
+	    color_out[1] = reflected_color[1];
+	    color_out[2] = reflected_color[2];
+	  }
 	  
 	  // compute radial attenuation
 	  vNormalize(N);

@@ -67,3 +67,5 @@ raycast.planeIntDbg.bk.c
 raycast.planeIntDbg.discard.c
 raycast*_*.c
 *.gz
+recurse.c
+*.log
