@@ -13,27 +13,18 @@
 	"radial-a2": .01
     },
     {
-	"type": "quadric",
-	"diffuse_color": [1.0, 0.5, 0.25],
-	"specular_color": [1.0, 1.0, 1.0],
-	"position": [-10, 0, 25],
-	"A": 2,
-	"B": 3,
-	"C": 5,
-	"D": 4,
-	"E": 6,
-	"F": 7,
-	"G": 1,
-	"H": 0,
-	"I": 3,
-	"J": 2
-    },
-    {
 	"type": "sphere",
 	"diffuse_color": [0, 0.5, 0.25],
 	"specular_color": [1.0, 1.0, 1.0],
 	"position": [3, 0, 30],
 	"radius": 5
+    },
+    {
+	"type": "sphere",
+	"diffuse_color": [0, 0.5, 0.25],
+	"specular_color": [1.0, 1.0, 1.0],
+	"position": [3, 0, 15],
+	"radius": 4
     }
 ]
 

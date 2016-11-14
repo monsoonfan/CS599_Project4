@@ -188,6 +188,12 @@ static inline void vScale(double* a, double s, double* c) {
   c[2] = s * a[2];
 }
 
+static inline void vCross(double* a, double* b, double* c) {
+  c[0] = a[1]*b[2] - a[2]*b[1];
+  c[1] = a[2]*b[0] - a[0]*b[2];
+  c[2] = a[0]*b[1] - a[1]*b[0];
+}
+
 static inline double pDistance (double* a, double* b) {
   return sqrt(sqr(b[0]-a[0]) + sqr(b[1]-a[1]) + sqr(b[2]-a[2]));
 }
@@ -257,6 +263,7 @@ double getCameraHeight();
 void   populateLightArray ();
 
 void getReflectionVector (double* L, double* N, double* R, int DBG_flag);
+void getRefractionVector (double* Ur, double* n, double ior, double* Ut);
 
 /* 
  ------------------------------------------------------------------
@@ -492,8 +499,8 @@ void readScene(char* filename) {
 	      ) {
 	    double value = nextNumber(json);
 	    // Error checking
-	    if (strcmp(type,"plane") == 0) message("Error","Plane has value that makes no sense(width,radius,etc)");
 	    // TODO add checks for project3 new params (like radial-a0 < 360, etc..)
+	    //if (strcmp(type,"plane") == 0) message("Error","Plane has value that makes no sense(width,radius,etc)");
 	    // store the value if pass checks
 	    storeDouble(obj_count,key,value);
 	  } else if ((strcmp(key, "color") == 0) ||
@@ -1202,9 +1209,14 @@ void rayCast(double* Ro, double* Rd, double* color_in, double* color_out, int le
 
 	if (best_t_shadow_index != 129) {
 	  // in a shadow, shade the pixel based on ambient light
+	  /*
 	  color_out[0] = getColor(object_color[0],ambient_color[0]);
 	  color_out[1] = getColor(object_color[1],ambient_color[1]);
 	  color_out[2] = getColor(object_color[2],ambient_color[2]);
+	  */
+	  color_out[0] = color_in[0];
+	  color_out[1] = color_in[1];
+	  color_out[2] = color_in[2];
 	  if (DBG) printf("      in shadow, ambient color: [%f,%f,%f]\n",color_out[0],color_out[1],color_out[2]);
 	} else SP: { 
 	  // not in a shadow, shade the pixel based on light source
@@ -1228,17 +1240,40 @@ void rayCast(double* Ro, double* Rd, double* color_in, double* color_out, int le
 	  //R = reflection of L about N: R = 2(N dot L)N - L
 	  getReflectionVector(L,N,R,DBG);
 
-	  // Add project 4 reflectivity
+	  // Add reflectivity for project 4
+	  double Ir[3];
+	  double Kr = INPUT_FILE_DATA.js_objects[best_t_index].reflectivity;
+	  
 	  if (INPUT_FILE_DATA.js_objects[best_t_index].flags.has_reflectivity &&
 		INPUT_FILE_DATA.js_objects[best_t_index].reflectivity > 0) {
-	    double reflected_color[3];
 	    level++;
-	    //printf("DBG: calling rayCast at level %d\n",level);
-	    rayCast(Ro_new,R,color_in,reflected_color,level);
-	    color_out[0] = reflected_color[0];
-	    color_out[1] = reflected_color[1];
-	    color_out[2] = reflected_color[2];
+	    //printf("DBG: calling rayCast at level %d\n",reflect_level);
+	    // adjust this by slight amount so you don't have to ignore current object
+	    double Ro_new_prime[3];
+	    double epsilon = 0.03;
+	    Ro_new_prime[0] = Ro_new[0] + Rd_new[0]*epsilon;
+	    Ro_new_prime[1] = Ro_new[1] + Rd_new[1]*epsilon;
+	    Ro_new_prime[2] = Ro_new[2] + Rd_new[2]*epsilon;
+	    //	    rayCast(Ro_new_prime,R,color_in,reflected_color,reflect_level,0);
+	    //rayCast(Ro_new_prime,R,INPUT_FILE_DATA.js_objects[best_t_index].diffuse_color,Ir,level);
+	    rayCast(Ro_new_prime,R,color_in,Ir,level);
 	  }
+
+	  // Add refractivity for project 4
+	  /*
+	  double U[3];
+	  //void getRefractionVector (double* Ur, double* n, double Pt, double* Ut) {
+	  getRefractionVector(L,N,INPUT_FILE_DATA.js_objects[best_t_index].ior,U);
+	  if (INPUT_FILE_DATA.js_objects[best_t_index].flags.has_refractivity &&
+		INPUT_FILE_DATA.js_objects[best_t_index].refractivity > 0) {
+	    double refracted_color[3];
+	    //printf("DBG: calling rayCast at level %d\n",level);
+	    rayCast(Ro_new,U,color_in,refracted_color,0,level);
+	    color_out[0] += refracted_color[0] * reflectivity;
+	    color_out[1] = refracted_color[1];
+	    color_out[2] = refracted_color[2];
+	  }
+	  */
 	  
 	  // compute radial attenuation
 	  vNormalize(N);
@@ -1271,7 +1306,12 @@ void rayCast(double* Ro, double* Rd, double* color_in, double* color_out, int le
 	  color_out[0] += r_atten * a_atten * (diffuse[0] + specular[0]);
 	  color_out[1] += r_atten * a_atten * (diffuse[1] + specular[1]);
 	  color_out[2] += r_atten * a_atten * (diffuse[2] + specular[2]);
-
+	  /*
+	  color_out[0] = r_atten * a_atten * (diffuse[0] + specular[0]) + Ir[0]*Kr;
+	  color_out[1] = r_atten * a_atten * (diffuse[1] + specular[1]) + Ir[1]*Kr;
+	  color_out[2] = r_atten * a_atten * (diffuse[2] + specular[2]) + Ir[2]*Kr;
+	  */
+	  
 	  /*
 	  if (DBG) printf("DBG co[0](%f): co(%f), r_a(%f), a_a(%f), d(%f), s(%f)\n"
 		 ,color_out[0],tmp0,r_atten,a_atten,diffuse[0],specular[0]);
@@ -1878,3 +1918,62 @@ void getReflectionVector (double* L, double* N, double* R, int DBG_flag) {
   getReflectionVector(L,N,R,1);
   */
 }
+
+/*
+  function to get vector from refraction
+  use the equations from the 08b-raytrace text
+ */
+void getRefractionVector (double* Ur, double* n, double Pt, double* Ut) {
+
+  // variables
+  double Pr = 1; // ior for air
+  double S[3];   // scaled vector
+  double a[3];
+  double b[3];
+  double cos_phi;
+  double sin_phi;
+
+  // Calculations
+  // first : get 'a' vector: a = (n X Ur)/||n X Ur||  <-- compute the cross-product and then normalize it
+  double n_cross_Ur[3];
+  vCross(n,Ur,n_cross_Ur);
+  vNormalize(n_cross_Ur);
+  // second: get 'b' vector: b = a X n
+  vCross(a,n,b);
+  // third : get sin_phi = Pr/Pt Ur dot b
+  double Ur_scaled[3];
+  vScale(Ur,(Pr/Pt),Ur_scaled);
+  sin_phi = vDot(Ur_scaled,b);
+  // fourth: get cos_phi = sqrt(1 - sin_phi^s)
+  cos_phi = sqrt(1 - sqr(sin_phi));
+  // fifth : solve for Ut = -n(cos_phi) + b(sin_phi)
+  double n_scaled[3];
+  double b_scaled[3];
+  vScale(n,-cos_phi,n_scaled);
+  vScale(b,sin_phi,b_scaled);
+  vAdd(n_scaled,b_scaled,Ut);
+}
+
+// https://www.siggraph.org/education/materials/HyperGraph/raytrace/rtillumi.htm
+//
+// I = Ilocal + Kr * R + Kt * T where R is the intensity of light from the reflected ray and T is the intensity
+// of light from the transmitted ray. Kr and Kt are the reflection and transmission coefficients. For a very
+// specular surface, such as plastic, we sometimes do not compute a local intensity, Ilocal, but only use the
+// reflected/transmitted intensity values.
+//
+// Some people will skip Snell's law and do a lookup instead
+//
+// Kr = reflection constant
+// Kt = refraction constant
+// Ilocal = Local shading (from Project #3)
+// IR = recursive call to shade the reflection vector
+// IT = recursive call to shade the refraction vector
+// I = (1 - Kr - Kt) * Ilocal + Kr * IR + Kt + IT   < his adjusted equation
+//
+// He talked about 3 nested spheres, pushing ior onto stack, pushing/popping (but easy way is just to pass in the
+// ior to the recursive function, this has the effect of making a stack.
+// Talked about, for a sphere, have to look at t values to understand if you are inside it or not (1+,1- t)
+// concentric circles are tricky
+// have to know if you are entering or exiting an object - but he said he won't nest spheres, will have plane
+// with spheres but they won't intersect. Not complicated nestings, intersections, etc...
+
