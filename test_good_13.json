@@ -17,7 +17,7 @@
 	"diffuse_color": [0.5, 0.5, 0.5],
 	"specular_color": [1.0, 0, 0],
 	"position": [0, -1, 0],
-	"refractivity": 0.3,
+	"refractivity": 0.5,
 	"ior": 1.5,
 	"normal": [0, 1, 0]
     },
@@ -25,7 +25,7 @@
 	"type": "sphere",
 	"diffuse_color": [1.0, 0.0, 0.0],
 	"specular_color": [1.0, 0.1, 0.10],
-	"position": [2, -2, 5],
+	"position": [2, -1.5, 5],
 	"radius": 2
     }
 ]

@@ -1243,14 +1243,14 @@ void rayCast(double* Ro, double* Rd, double* color_in, double* color_out, int le
 	  // Add reflectivity for project 4
 	  double Ir[3];
 	  double Kr = INPUT_FILE_DATA.js_objects[best_t_index].reflectivity;
+	  double Ro_new_prime[3];
+	  double epsilon = 0.03;
 	  
 	  if (INPUT_FILE_DATA.js_objects[best_t_index].flags.has_reflectivity &&
 		INPUT_FILE_DATA.js_objects[best_t_index].reflectivity > 0) {
 	    level++;
 	    //printf("DBG: calling rayCast at level %d\n",reflect_level);
 	    // adjust this by slight amount so you don't have to ignore current object
-	    double Ro_new_prime[3];
-	    double epsilon = 0.03;
 	    Ro_new_prime[0] = Ro_new[0] + Rd_new[0]*epsilon;
 	    Ro_new_prime[1] = Ro_new[1] + Rd_new[1]*epsilon;
 	    Ro_new_prime[2] = Ro_new[2] + Rd_new[2]*epsilon;
@@ -1260,20 +1260,17 @@ void rayCast(double* Ro, double* Rd, double* color_in, double* color_out, int le
 	  }
 
 	  // Add refractivity for project 4
-	  /*
+	  double It[3];
+	  double Kt = INPUT_FILE_DATA.js_objects[best_t_index].refractivity;
 	  double U[3];
 	  //void getRefractionVector (double* Ur, double* n, double Pt, double* Ut) {
 	  getRefractionVector(L,N,INPUT_FILE_DATA.js_objects[best_t_index].ior,U);
 	  if (INPUT_FILE_DATA.js_objects[best_t_index].flags.has_refractivity &&
-		INPUT_FILE_DATA.js_objects[best_t_index].refractivity > 0) {
-	    double refracted_color[3];
+	      INPUT_FILE_DATA.js_objects[best_t_index].refractivity > 0) {
+	    level++;
 	    //printf("DBG: calling rayCast at level %d\n",level);
-	    rayCast(Ro_new,U,color_in,refracted_color,0,level);
-	    color_out[0] += refracted_color[0] * reflectivity;
-	    color_out[1] = refracted_color[1];
-	    color_out[2] = refracted_color[2];
+	    rayCast(Ro_new_prime,U,color_in,It,level);
 	  }
-	  */
 	  
 	  // compute radial attenuation
 	  vNormalize(N);
@@ -1303,9 +1300,9 @@ void rayCast(double* Ro, double* Rd, double* color_in, double* color_out, int le
 	  double tmp0 = color_out[0]; // for the DBG statement TODO remove this DBG stuff
 	  double tmp1 = color_out[1]; // for the DBG statement
 	  double tmp2 = color_out[2]; // for the DBG statement
-	  color_out[0] = r_atten * a_atten * (diffuse[0] + specular[0]) + Ir[0]*Kr;
-	  color_out[1] = r_atten * a_atten * (diffuse[1] + specular[1]) + Ir[1]*Kr;
-	  color_out[2] = r_atten * a_atten * (diffuse[2] + specular[2]) + Ir[2]*Kr;
+	  color_out[0] = r_atten * a_atten * (diffuse[0] + specular[0]) + Ir[0]*Kr + It[0]*Kt;
+	  color_out[1] = r_atten * a_atten * (diffuse[1] + specular[1]) + Ir[1]*Kr + It[1]*Kt;
+	  color_out[2] = r_atten * a_atten * (diffuse[2] + specular[2]) + Ir[2]*Kr + It[2]*Kt;
 	  
 	  /*
 	  if (DBG) printf("DBG co[0](%f): co(%f), r_a(%f), a_a(%f), d(%f), s(%f)\n"
@@ -1971,4 +1968,10 @@ void getRefractionVector (double* Ur, double* n, double Pt, double* Ut) {
 // concentric circles are tricky
 // have to know if you are entering or exiting an object - but he said he won't nest spheres, will have plane
 // with spheres but they won't intersect. Not complicated nestings, intersections, etc...
+
+// 11/15/16 notes on the project:
+// defaults: reflectivity = refractivity = 0, ior = 1
+// shadows: ideally, attenuate the shadow based on amount of light making it through the ball, but we can just
+//          keep our shadow code the same (black) and it's fine
+// only 2 ior to consider at most in the test scenes
 
