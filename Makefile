@@ -29,7 +29,7 @@ cone:
 #############################################
 # targets for testing good and bad json files
 #############################################
-testgood.%:
+tg.%:
 #	ifeq ($(wildcard("test.ppm")),)
 #		echo "it's there"
 #	endif

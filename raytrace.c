@@ -1300,17 +1300,12 @@ void rayCast(double* Ro, double* Rd, double* color_in, double* color_out, int le
 	  specular[2] = Ispec(best_t_index, j, 2, V, R, N, L, ns);
 
 	  // Now, use the big equation to calculate the color for each pixel
-	  double tmp0 = color_out[0]; // for the DBG statement
+	  double tmp0 = color_out[0]; // for the DBG statement TODO remove this DBG stuff
 	  double tmp1 = color_out[1]; // for the DBG statement
 	  double tmp2 = color_out[2]; // for the DBG statement
-	  color_out[0] += r_atten * a_atten * (diffuse[0] + specular[0]);
-	  color_out[1] += r_atten * a_atten * (diffuse[1] + specular[1]);
-	  color_out[2] += r_atten * a_atten * (diffuse[2] + specular[2]);
-	  /*
 	  color_out[0] = r_atten * a_atten * (diffuse[0] + specular[0]) + Ir[0]*Kr;
 	  color_out[1] = r_atten * a_atten * (diffuse[1] + specular[1]) + Ir[1]*Kr;
 	  color_out[2] = r_atten * a_atten * (diffuse[2] + specular[2]) + Ir[2]*Kr;
-	  */
 	  
 	  /*
 	  if (DBG) printf("DBG co[0](%f): co(%f), r_a(%f), a_a(%f), d(%f), s(%f)\n"
